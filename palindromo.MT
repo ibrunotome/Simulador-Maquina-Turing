@@ -48,10 +48,10 @@ fim ; iniEsq
 
 ; avanca ate caractere minusculo ou _
 bloco iniDir 1
-01 _ −− ∗ i retorne
-01 a −− ∗ i retorne
-01 b −− ∗ i retorne
-01 ∗ −− ∗ d 01
+    01 _ −− ∗ i retorne
+    01 a −− ∗ i retorne
+    01 b −− ∗ i retorne
+    01 ∗ −− ∗ d 01
 fim ; iniDir
 
 ; palavra eh palindromo

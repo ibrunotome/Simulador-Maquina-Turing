@@ -1,7 +1,9 @@
 # coding=utf-8
 
 tape = ''
-blocks = {}
+head_position = 21  # The current position of head
+blocks = {}  # All the blocks readed
+stack = []  # Stack to back to previously block
 
 
 def header():
@@ -96,6 +98,45 @@ def get_next_state(_line):
     return _state
 
 
+def get_block_next_state(_line):
+    """
+    Get the next state of non block line
+
+    :param _line:
+    :return int:
+    """
+    _state = _line.split()
+    _state = _state[2]
+
+    return _state
+
+
+def get_current_symbol(_line):
+    """
+    Get the current symbol of non block line
+
+    :param _line:
+    :return str:
+    """
+    _symbol = _line.split()
+    _symbol = _symbol[1]
+
+    return _symbol
+
+
+def get_next_symbol(_line):
+    """
+    Get the current symbol of non block line
+
+    :param _line:
+    :return str:
+    """
+    _symbol = _line.split()
+    _symbol = _symbol[3]
+
+    return _symbol
+
+
 def set_left_tape():
     """
     Set the initial left tape
@@ -124,12 +165,72 @@ def set_right_tape(_initial_word):
 
 
 def set_initial_head(_initial_word):
+    """
+    Put the head into the initial word
+
+    :param _initial_word:
+    :return:
+    """
     return '(' + _initial_word[0] + ')' + _initial_word[1:]
 
 
 def set_initial_tape(_initial_word):
+    """
+    Set the initial tape
+
+    :param _initial_word:
+    """
     global tape
     tape = set_left_tape() + set_initial_head(_initial_word) + set_right_tape(_initial_word)
+
+
+def update_tape(_line):
+    """
+    Update the content of the tape
+
+    :param _line:
+    """
+    global tape
+    tape = tape[:head_position] + get_next_symbol(_line) + tape[(head_position + 1):]
+
+
+def output(_block, _state):
+    """
+    Create the final ouput for each line
+
+    :param _block:
+    :param _state:
+    :return str:
+    """
+    global tape
+    return fix_block_output(_block) + fix_state_output(_state) + tape
+
+
+def read_blocks(_script):
+    """
+    Read all the lines and put into a list, foreach list and save the blocks
+
+    :param _script:
+    """
+
+    global blocks
+    lines = _script.readlines()
+    lines = [x for x in lines if not x.startswith('    ;')]
+    list_of_this_block = []
+    block = 'main'
+
+    for _line in lines:
+
+        # Check if there is a block
+        if _line.startswith('bloco'):
+            block = get_block(_line)
+            blocks[block] = ''
+            continue
+        elif _line.startswith(' '):
+            list_of_this_block.append(_line)
+        elif _line.startswith('fim'):
+            blocks[block] = list_of_this_block
+            list_of_this_block = []
 
 
 if __name__ == '__main__':
@@ -142,24 +243,15 @@ if __name__ == '__main__':
 
     set_initial_tape(initial_word)
 
-    lines = script.readlines()
-    list_of_this_block = []
-    block = 'main'
+    # Read all the file and put blocks into a list
+    read_blocks(script)
 
-    for line in lines:
-        # Jump comments
-        if line.startswith(';'):
-            continue
-
-        # Check if there is a block
-        if line.startswith('bloco'):
-            block = get_block(line)
-            blocks[block] = ''
-            continue
-        elif line.startswith(' '):
-            list_of_this_block.append(line)
-        elif line.startswith('fim'):
-            blocks[block] = list_of_this_block
-            list_of_this_block = []
-
-    print blocks['moveFim']
+    for line in blocks['main']:
+        if len(line.split()) == 6:
+            current_state = get_current_state(line)
+            print output('main', current_state)
+            if tape[head_position] == get_current_symbol(line):
+                update_tape(line)
+                next_state = get_next_state(line)
+                print output('main', next_state)
+                exit(0)
