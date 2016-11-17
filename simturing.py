@@ -3,7 +3,8 @@
 tape = ''
 head_position = 21  # The current position of head
 blocks = {}  # All the blocks readed
-stack = []  # Stack to back to previously block
+block_stack = []  # Stack to back to previously block
+state_stack = []  # Stack to back to previously state
 
 
 def header():
@@ -246,12 +247,24 @@ if __name__ == '__main__':
     # Read all the file and put blocks into a list
     read_blocks(script)
 
+    current_state = '01'
+    current_block = 'main'
+    print output(current_block, current_state)
+
     for line in blocks['main']:
-        if len(line.split()) == 6:
-            current_state = get_current_state(line)
-            print output('main', current_state)
+        current_state = get_current_state(line)
+
+        if current_state != get_current_state(line):
+            print 'continue'
+            continue
+        elif len(line.split()) == 6:
             if tape[head_position] == get_current_symbol(line):
                 update_tape(line)
                 next_state = get_next_state(line)
-                print output('main', next_state)
+                print output(current_block, next_state)
+        elif len(line.split()) == 3:
+            block_stack.append(current_block)
+            current_block = get_block(line)
+            for i in blocks[current_block]:
+                print i
                 exit(0)
