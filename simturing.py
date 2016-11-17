@@ -1,5 +1,8 @@
 # coding=utf-8
 
+tape = ''
+blocks = {}
+
 
 def header():
     """
@@ -124,6 +127,11 @@ def set_initial_head(_initial_word):
     return '(' + _initial_word[0] + ')' + _initial_word[1:]
 
 
+def set_initial_tape(_initial_word):
+    global tape
+    tape = set_left_tape() + set_initial_head(_initial_word) + set_right_tape(_initial_word)
+
+
 if __name__ == '__main__':
     print header()
 
@@ -132,24 +140,33 @@ if __name__ == '__main__':
 
     script = open('palindromo.MT', 'r')
 
-    initial_tape = set_left_tape() + set_initial_head(initial_word) + set_right_tape(initial_word)
+    set_initial_tape(initial_word)
 
-    for line in script:
-        # Jump comments
-        if line.startswith(';'):
-            continue
+    line = script.readline()
 
-        # Check if there is a block
-        if line.startswith('bloco'):
-            block = get_block(line)
-            block_output = fix_block_output(block)
-            state = get_initial_block_state(line)
-            state_output = fix_state_output(state)
-            print block_output + state_output + initial_tape
-            exit(0)
-            # print block_output + state_output
-        elif line.startswith(' '):
-            current_state = get_current_state(line)
-            next_state = get_next_state(line)
-            print fix_state_output(current_state) + ' ' + fix_state_output(next_state)
-            exit(0)
+    # Jump comments
+    if line.startswith(';'):
+        line = script.readline()
+
+    # Check if there is a block
+    if line.startswith('bloco'):
+        block = get_block(line)
+        blocks[block] = ''
+        list_of_this_block = []
+        while not line.startswith('fim'):
+            line = script.readline()
+            list_of_this_block.append(line)
+
+        blocks[block] = list_of_this_block
+
+        block_output = fix_block_output(block)
+        state = get_initial_block_state(line)
+        state_output = fix_state_output(state)
+        print block_output + state_output + tape
+        exit(0)
+        # print block_output + state_output
+    elif line.startswith(' '):
+        current_state = get_current_state(line)
+        next_state = get_next_state(line)
+        print fix_state_output(current_state) + ' ' + fix_state_output(next_state)
+        exit(0)
