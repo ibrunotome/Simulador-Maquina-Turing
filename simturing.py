@@ -37,7 +37,7 @@ def fix_block_output(_block):
     for i in range(0, (16 - len(_block))):
         _block_fixed += '.'
 
-    return _block_fixed + _block
+    return _block_fixed + _block + '.'
 
 
 def get_initial_block_state(_line):
@@ -45,7 +45,7 @@ def get_initial_block_state(_line):
     Get the initial state of block
 
     :param _line:
-    :return str:
+    :return int:
     """
     _initial_state = _line.split()
     _initial_state = _initial_state[2]
@@ -64,7 +64,7 @@ def fix_state_output(_state):
     for i in range(0, (4 - len(_state))):
         _state_fixed += '0'
 
-    return _state_fixed + _state
+    return _state_fixed + _state + ':'
 
 
 def get_current_state(_line):
@@ -72,7 +72,7 @@ def get_current_state(_line):
     Get the current state of non block line
 
     :param _line:
-    :return str:
+    :return int:
     """
     _state = _line.split()
     _state = _state[0]
@@ -85,7 +85,7 @@ def get_next_state(_line):
     Get the next state of non block line
 
     :param _line:
-    :return str:
+    :return int:
     """
     _state = _line.split()
     _state = _state[5]
@@ -93,14 +93,46 @@ def get_next_state(_line):
     return _state
 
 
-# initialWord = raw_input('Forneça a palavra inicial: ')
-#
-# print initialWord
+def set_left_tape():
+    """
+    Set the initial left tape
+
+    :return str:
+    """
+    _blank_space = ''
+    for i in range(0, 20):
+        _blank_space += '_'
+
+    return _blank_space
+
+
+def set_right_tape(_initial_word):
+    """
+    Set the initial right tape
+
+    :param _initial_word:
+    :return str:
+    """
+    _blank_space = ''
+    for i in range(0, (20 - len(_initial_word))):
+        _blank_space += '_'
+
+    return _blank_space
+
+
+def set_initial_head(_initial_word):
+    return '(' + _initial_word[0] + ')' + _initial_word[1:]
+
 
 if __name__ == '__main__':
     print header()
 
+    # initialWord = raw_input('Forneça a palavra inicial: ')
+    initial_word = 'aba'
+
     script = open('palindromo.MT', 'r')
+
+    initial_tape = set_left_tape() + set_initial_head(initial_word) + set_right_tape(initial_word)
 
     for line in script:
         # Jump comments
@@ -110,12 +142,13 @@ if __name__ == '__main__':
         # Check if there is a block
         if line.startswith('bloco'):
             block = get_block(line)
-            block_output = fix_block_output(block) + '.'
+            block_output = fix_block_output(block)
             state = get_initial_block_state(line)
             state_output = fix_state_output(state)
+            print block_output + state_output + initial_tape
+            exit(0)
             # print block_output + state_output
-
-        if line.startswith(' '):
+        elif line.startswith(' '):
             current_state = get_current_state(line)
             next_state = get_next_state(line)
             print fix_state_output(current_state) + ' ' + fix_state_output(next_state)
