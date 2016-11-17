@@ -60,7 +60,7 @@ bloco sim 1
     02 ∗ −− ∗ d 03
     03 ∗ −− S d 04
     03 ∗ −− I d 04
-    03 ∗ −− M dretorne
+    03 ∗ −− M d retorne
 fim ; sim
 
 ; palavra nao eh palindromo
