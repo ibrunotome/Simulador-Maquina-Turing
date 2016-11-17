@@ -151,15 +151,24 @@ def get_direction(_line):
     return _direction
 
 
-def update_head_position(_line):
+def move_head_position(_line):
     global head_position
-
     _direction = get_direction(_line)
-
     if _direction == 'd':
         head_position += 1
     elif _direction == 'e':
         head_position -= 1
+
+
+def update_head_position(_line):
+    global head_position
+
+    _current_symbol = get_current_symbol(line)
+
+    if _current_symbol == '*':
+        move_head_position(_line)
+    elif tape[head_position] == _current_symbol:
+        move_head_position(_line)
 
 
 def set_left_tape():
@@ -291,14 +300,18 @@ if __name__ == '__main__':
             current_block = get_block(line)
 
             for i in blocks[current_block]:
+
                 if len(i.split()) == 6:
-                    current_state = get_current_state(i)
-                    print output(current_block, current_state)
-                    print head_position
                     update_head_position(i)
-                    if current_state != get_current_state(line):
+                    current_state = get_current_state(i)
+                    next_state = get_next_state(i)
+                    if get_next_state(i) == 'retorne':
+                        block_stack.pop()
+                        print output(current_block, current_state)
+                        break
+                    elif current_state != get_current_state(line):
                         continue
                     else:
                         print i
 
-            exit(0)
+
