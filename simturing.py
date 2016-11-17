@@ -138,6 +138,30 @@ def get_next_symbol(_line):
     return _symbol
 
 
+def get_direction(_line):
+    """
+    Get the direction
+
+    :param _line:
+    :return int:
+    """
+    _direction = _line.split()
+    _direction = _direction[4]
+
+    return _direction
+
+
+def update_head_position(_line):
+    global head_position
+
+    _direction = get_direction(_line)
+
+    if _direction == 'd':
+        head_position += 1
+    elif _direction == 'e':
+        head_position -= 1
+
+
 def set_left_tape():
     """
     Set the initial left tape
@@ -255,9 +279,9 @@ if __name__ == '__main__':
         current_state = get_current_state(line)
 
         if current_state != get_current_state(line):
-            print 'continue'
             continue
         elif len(line.split()) == 6:
+            update_head_position(line)
             if tape[head_position] == get_current_symbol(line):
                 update_tape(line)
                 next_state = get_next_state(line)
@@ -265,6 +289,16 @@ if __name__ == '__main__':
         elif len(line.split()) == 3:
             block_stack.append(current_block)
             current_block = get_block(line)
+
             for i in blocks[current_block]:
-                print i
-                exit(0)
+                if len(i.split()) == 6:
+                    current_state = get_current_state(i)
+                    print output(current_block, current_state)
+                    print head_position
+                    update_head_position(i)
+                    if current_state != get_current_state(line):
+                        continue
+                    else:
+                        print i
+
+            exit(0)
