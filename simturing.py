@@ -310,18 +310,38 @@ def read_blocks(_script):
 
 
 def state_transition(_current_block, _line):
+    global blocks
+
     _current_state = get_current_state(_line)
     _next_state = get_next_state(_line)
 
-    if _current_state == _next_state:
-        update_head_position(_line)
-        print output(_current_block, _next_state)
+    if tape[head_position] == get_current_symbol(_line):
+        update_tape(_line)
+        if _next_state == 'retorne':
+            print 'entrei'
+            exit(0)
         state_transition(_current_block, _line)
 
-    # If position in the tape is equal to current symbol, write the new symbol to the tape
-    elif tape[head_position] == get_current_symbol(_line):
-        update_tape(_line)
-        print output(_current_block, _next_state)
+    elif _current_state == _next_state:
+        for _index in blocks[_current_block]:
+            _index_aux = _index.split()
+            if _index_aux[0] == _current_state:
+                # If position in the tape is equal to current symbol, write the new symbol to the tape
+                print "linha atual: ", _index
+                print output(_current_block, _next_state)
+                print tape[head_position]
+                print get_current_symbol(_index)
+                _next_state = get_next_state(_index)
+
+                if tape[head_position] == get_current_symbol(_index):
+                    update_tape(_line)
+                    if _next_state == 'retorne':
+                        print 'entrei'
+                        exit(0)
+                    state_transition(_current_block, _line)
+
+        update_head_position(_line)
+        state_transition(_current_block, _line)
 
 
 def block_transition():
