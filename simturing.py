@@ -327,18 +327,16 @@ def state_transition(_current_block, _line):
             _index_aux = _index.split()
             if _index_aux[0] == _current_state:
                 # If position in the tape is equal to current symbol, write the new symbol to the tape
-                print "linha atual: ", _index
-                print output(_current_block, _next_state)
-                print tape[head_position]
-                print get_current_symbol(_index)
                 _next_state = get_next_state(_index)
+
+                if _next_state == 'retorne':
+                    print output(_current_block, _current_state)
 
                 if tape[head_position] == get_current_symbol(_index):
                     update_tape(_line)
                     if _next_state == 'retorne':
-                        print 'entrei'
+                        print 'bitch'
                         exit(0)
-                    state_transition(_current_block, _line)
 
         update_head_position(_line)
         state_transition(_current_block, _line)
@@ -376,6 +374,7 @@ if __name__ == '__main__':
 
         # It's a line with format: bloco <id> <initial_state>
         elif len(line.split()) == 3:
+            print output(current_block, current_state)
             next_state = get_next_block_state(line)
             stack.append(next_state)
 
