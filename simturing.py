@@ -254,7 +254,6 @@ def update_tape(_line):
     global tape
 
     _current_symbol = get_next_symbol(_line)
-    print _current_symbol
 
     if not is_asterisc(_current_symbol):
         tape = tape[:head_position] + get_next_symbol(_line) + tape[(head_position + 1):]
@@ -313,7 +312,7 @@ def state_transition(_current_block, _line):
         update_tape(_line)
         if _next_state == 'retorne':
             print output(_current_block, _current_state)
-            return run('main', stack[len(stack) - 1])
+            return run(stack[len(stack) - 1], stack[len(stack) - 2])
         state_transition(_current_block, _line)
 
     elif _current_state == _next_state:
@@ -323,14 +322,11 @@ def state_transition(_current_block, _line):
                 # If position in the tape is equal to current symbol, write the new symbol to the tape
                 _next_state = get_next_state(_index)
 
-                if _next_state == 'retorne':
-                    print output(_current_block, _current_state)
-
                 if tape[head_position] == get_current_symbol(_index):
                     if _next_state == 'retorne':
                         move_head_position(_index)
                         print output(_current_block, _current_state)
-                        return run('main', stack[len(stack) - 1])
+                        return run(stack[len(stack) - 1], stack[len(stack) - 2])
 
         move_head_position(_line)
         state_transition(_current_block, _line)
@@ -351,16 +347,16 @@ def run(_current_block, _next_state):
                 print output(_current_block, _current_state)
                 _next_state = get_next_block_state(_line)
                 if len(stack) != 0:
-                    stack.pop()
+                    stack.pop()  # Remove block
+                    stack.pop()  # Remove state
                 stack.append(_next_state)
+                stack.append(_current_block)
 
                 _current_block = get_block(_line)
 
                 for index in blocks[_current_block]:
                     if len(index.split()) == 6:
                         state_transition(_current_block, index)
-
-    return None
 
 
 def is_asterisc(_symbol):
