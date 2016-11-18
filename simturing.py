@@ -1,10 +1,10 @@
 # coding=utf-8
+import re
 
 tape = ''
 head_position = 21  # The current position of head
 blocks = {}  # All the blocks readed
-block_stack = []  # Stack to back to previously block
-state_stack = []  # Stack to back to previously state
+stack = []
 
 
 def header():
@@ -17,6 +17,40 @@ def header():
     header_string += '\nIFMG, 2016.\n'
 
     return header_string
+
+
+def get_globals():
+    global tape
+    global head_position
+    global stack
+
+    print '\n\nGLOBALS\n'
+
+    print 'tape: ', tape
+    print 'head_position: ', head_position
+    print 'stack: ', stack
+
+    print '==================================================\n\n'
+
+
+def swap(s, i, j):
+    lst = list(s)
+    lst[i], lst[j] = lst[j], lst[i]
+    return ''.join(lst)
+
+
+def move_head_right():
+    global tape
+
+    tape = swap(tape, head_position - 1, head_position)
+    tape = swap(tape, head_position + 1, head_position + 2)
+
+
+def move_head_left():
+    global tape
+
+    tape = swap(tape, head_position, head_position + 1)
+    tape = swap(tape, head_position - 2, head_position - 1)
 
 
 def get_block(_line):
@@ -40,7 +74,7 @@ def fix_block_output(_block):
     :return str:
     """
     _block_fixed = ''
-    for i in range(0, (16 - len(_block))):
+    for _i in range(0, (16 - len(_block))):
         _block_fixed += '.'
 
     return _block_fixed + _block + '.'
@@ -67,7 +101,7 @@ def fix_state_output(_state):
     :return str:
     """
     _state_fixed = ''
-    for i in range(0, (4 - len(_state))):
+    for _i in range(0, (4 - len(_state))):
         _state_fixed += '0'
 
     return _state_fixed + _state + ':'
@@ -99,7 +133,7 @@ def get_next_state(_line):
     return _state
 
 
-def get_block_next_state(_line):
+def get_next_block_state(_line):
     """
     Get the next state of non block line
 
@@ -151,24 +185,31 @@ def get_direction(_line):
     return _direction
 
 
-def move_head_position(_line):
+def move_head_position(_line, _update):
     global head_position
+
     _direction = get_direction(_line)
+
     if _direction == 'd':
+        move_head_right()
         head_position += 1
+        if _update:
+            update_tape(_line)
     elif _direction == 'e':
+        move_head_left()
         head_position -= 1
+        if _update:
+            update_tape(_line)
 
 
 def update_head_position(_line):
-    global head_position
+    _current_symbol = get_current_symbol(_line)
 
-    _current_symbol = get_current_symbol(line)
-
-    if _current_symbol == '*':
-        move_head_position(_line)
+    _patter = re.compile('\*')
+    if _patter.match('*'):
+        move_head_position(_line, False)
     elif tape[head_position] == _current_symbol:
-        move_head_position(_line)
+        move_head_position(_line, True)
 
 
 def set_left_tape():
@@ -178,7 +219,7 @@ def set_left_tape():
     :return str:
     """
     _blank_space = ''
-    for i in range(0, 20):
+    for _i in range(0, 20):
         _blank_space += '_'
 
     return _blank_space
@@ -192,7 +233,7 @@ def set_right_tape(_initial_word):
     :return str:
     """
     _blank_space = ''
-    for i in range(0, (20 - len(_initial_word))):
+    for _i in range(0, (20 - len(_initial_word))):
         _blank_space += '_'
 
     return _blank_space
@@ -225,6 +266,7 @@ def update_tape(_line):
     :param _line:
     """
     global tape
+
     tape = tape[:head_position] + get_next_symbol(_line) + tape[(head_position + 1):]
 
 
@@ -267,6 +309,25 @@ def read_blocks(_script):
             list_of_this_block = []
 
 
+def state_transition(_current_block, _line):
+    _current_state = get_current_state(_line)
+    _next_state = get_next_state(_line)
+
+    if _current_state == _next_state:
+        update_head_position(_line)
+        print output(_current_block, _next_state)
+        state_transition(_current_block, _line)
+
+    # If position in the tape is equal to current symbol, write the new symbol to the tape
+    elif tape[head_position] == get_current_symbol(_line):
+        update_tape(_line)
+        print output(_current_block, _next_state)
+
+
+def block_transition():
+    return None
+
+
 if __name__ == '__main__':
     print header()
 
@@ -281,37 +342,27 @@ if __name__ == '__main__':
     read_blocks(script)
 
     current_state = '01'
+    next_state = '01'
     current_block = 'main'
     print output(current_block, current_state)
 
     for line in blocks['main']:
         current_state = get_current_state(line)
 
-        if current_state != get_current_state(line):
-            continue
-        elif len(line.split()) == 6:
-            update_head_position(line)
-            if tape[head_position] == get_current_symbol(line):
-                update_tape(line)
-                next_state = get_next_state(line)
-                print output(current_block, next_state)
+        # It's a line with format: <current state> <current symbol> -- <next symbol> <direction> <next state>
+        if len(line.split()) == 6:
+            next_state = get_next_state(line)
+            state_transition(current_block, line)
+
+        # It's a line with format: bloco <id> <initial_state>
         elif len(line.split()) == 3:
-            block_stack.append(current_block)
+            next_state = get_next_block_state(line)
+            stack.append(next_state)
+
             current_block = get_block(line)
 
-            for i in blocks[current_block]:
+            for index in blocks[current_block]:
+                if len(index.split()) == 6:
+                    state_transition(current_block, index)
 
-                if len(i.split()) == 6:
-                    update_head_position(i)
-                    current_state = get_current_state(i)
-                    next_state = get_next_state(i)
-                    if get_next_state(i) == 'retorne':
-                        block_stack.pop()
-                        print output(current_block, current_state)
-                        break
-                    elif current_state != get_current_state(line):
-                        continue
-                    else:
-                        print i
-
-
+            exit(0)
