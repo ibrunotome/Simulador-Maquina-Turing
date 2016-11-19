@@ -24,13 +24,13 @@ def get_globals():
     global head_position
     global stack
 
-    print '\n\nGLOBALS\n'
+    print('\n\nGLOBALS\n')
 
-    print 'tape: ', tape
-    print 'head_position: ', head_position
-    print 'stack: ', stack
+    print('tape: ', tape)
+    print('head_position: ', head_position)
+    print('stack: ', stack)
 
-    print '==================================================\n\n'
+    print('==================================================\n\n')
 
 
 def swap(s, i, j):
@@ -301,31 +301,30 @@ def read_blocks(_script):
 
 
 def state_transition(_current_block, _line):
+    global tape
+    global head_position
     global blocks
     global stack
 
-    _current_state = get_current_state(_line)
-    _next_state = get_next_state(_line)
-
     if tape[head_position] == get_current_symbol(_line):
-
         update_tape(_line)
-        if _next_state == 'retorne':
-            print output(_current_block, _current_state)
+        if get_next_state(_line) == 'retorne':
+            print(output(_current_block, get_current_state(_line)))
             return run(stack[len(stack) - 1], stack[len(stack) - 2])
-        state_transition(_current_block, _line)
 
-    elif _current_state == _next_state:
+    elif get_current_state(_line) == get_next_state(_line):
         for _index in blocks[_current_block]:
             _index_aux = _index.split()
-            if _index_aux[0] == _current_state:
+            if _index_aux[0] == get_current_state(_index):
                 # If position in the tape is equal to current symbol, write the new symbol to the tape
-                _next_state = get_next_state(_index)
+
+                if get_next_state(_index) == 'retorne':
+                    print(output(_current_block, get_current_state(_index)))
 
                 if tape[head_position] == get_current_symbol(_index):
-                    if _next_state == 'retorne':
+                    update_tape(_index)
+                    if get_next_state(_index) == 'retorne':
                         move_head_position(_index)
-                        print output(_current_block, _current_state)
                         return run(stack[len(stack) - 1], stack[len(stack) - 2])
 
         move_head_position(_line)
@@ -333,18 +332,30 @@ def state_transition(_current_block, _line):
 
 
 def run(_current_block, _next_state):
-    for _line in blocks[_current_block]:
-        _current_state = get_current_state(_line)
+    """
+    Run over the block lines
 
-        if _current_state == _next_state:
+    :param _current_block:
+    :param _next_state:
+    """
+    global tape
+    global head_position
+
+    print(output(_current_block, _next_state))
+
+    for _line in blocks[_current_block]:
+        if get_current_state(_line) == _next_state:
             # It's a line with format: <current state> <current symbol> -- <next symbol> <direction> <next state>
             if len(_line.split()) == 6:
-                _next_state = get_next_state(_line)
-                state_transition(_current_block, _line)
+                if tape[head_position] == get_current_symbol(_line):
+                    _next_state = get_next_state(_line)
+                    state_transition(_current_block, _line)
+                else:
+                    continue
 
             # It's a line with format: bloco <id> <initial_state>
             elif len(_line.split()) == 3:
-                print output(_current_block, _current_state)
+                print(output(_current_block, get_current_state(_line)))
                 _next_state = get_next_block_state(_line)
                 if len(stack) != 0:
                     stack.pop()  # Remove block
@@ -356,6 +367,7 @@ def run(_current_block, _next_state):
 
                 for index in blocks[_current_block]:
                     if len(index.split()) == 6:
+                        _next_state = get_next_state(index)
                         state_transition(_current_block, index)
 
 
@@ -369,7 +381,7 @@ def is_asterisc(_symbol):
 
 
 if __name__ == '__main__':
-    print header()
+    print(header())
 
     # initialWord = raw_input('Forneça a palavra inicial: ')
     initial_word = 'aba'
@@ -384,5 +396,4 @@ if __name__ == '__main__':
     current_state = '01'
     next_state = '01'
     current_block = 'main'
-    print output(current_block, current_state)
     run(current_block, next_state)
