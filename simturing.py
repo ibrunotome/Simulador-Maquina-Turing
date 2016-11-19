@@ -301,6 +301,13 @@ def read_blocks(_script):
 
 
 def state_transition(_current_block, _line):
+    """
+    Make the transition between the states
+
+    :param _current_block:
+    :param _line:
+    :return str:
+    """
     global tape
     global head_position
     global blocks
@@ -372,6 +379,12 @@ def run(_current_block, _next_state):
 
 
 def is_asterisc(_symbol):
+    """
+    Check if symbol is an asterisc
+
+    :param _symbol:
+    :return bool:
+    """
     type_1 = re.compile('∗')
     type_2 = re.compile('\*')
 
