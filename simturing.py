@@ -429,6 +429,15 @@ def run(_current_block, _next_state):
                     if len(index.split()) == 6:
                         _next_state = get_next_state(index)
                         state_transition(_current_block, index)
+                    elif len(index.split()) == 3:
+                        # It's the end
+                        print(output(_current_block, get_current_state(_row)))
+                        _next_state = get_next_block_state(_row)
+
+                        stack.append(_next_state)
+                        stack.append(_current_block)
+
+                        _current_block = get_block(_row)
 
 
 def is_asterisc(_symbol):
@@ -464,3 +473,4 @@ if __name__ == '__main__':
     next_state = '01'
     current_block = 'main'
     run(current_block, next_state)
+    print stack
