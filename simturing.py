@@ -373,6 +373,14 @@ def state_transition(_current_block, _row):
 
             # Walking on tape
             if get_next_state(_row_of_block) == 'retorne':
+
+                # It's the end of machine
+                if stack[len(stack) - 1] == 'sim' or stack[len(stack) - 1] == 'nao':
+
+                    # Clean the stack
+                    stack = []
+                    return
+
                 print(output(_current_block, get_current_state(_row_of_block)))
 
             # If position in the tape is equal to current symbol, write the new symbol to the tape
@@ -382,6 +390,7 @@ def state_transition(_current_block, _row):
                 # If next state is 'retorne', call the last block of stack and go back to the last state of the stack
                 if get_next_state(_row_of_block) == 'retorne':
                     move_head_position(_row_of_block)
+                    update_tape(_row_of_block)
                     return run(stack[len(stack) - 1], stack[len(stack) - 2])
 
         move_head_position(_row)
@@ -411,6 +420,8 @@ def run(_current_block, _next_state):
                     _next_state = get_next_state(_row)
                     state_transition(_current_block, _row)
                 elif is_asterisc(get_current_symbol(_row)):
+                    move_head_position(_row)
+                    update_tape(_row)
                     run(_current_block, get_next_state(_row))
 
             # It's a row with format: bloco <id> <initial_state>
@@ -431,13 +442,12 @@ def run(_current_block, _next_state):
                         state_transition(_current_block, index)
                     elif len(index.split()) == 3:
                         # It's the end
-                        print(output(_current_block, get_current_state(_row)))
-                        _next_state = get_next_block_state(_row)
-
+                        print(output(_current_block, get_current_state(index)))
+                        _next_state = get_next_block_state(index)
                         stack.append(_next_state)
                         stack.append(_current_block)
 
-                        _current_block = get_block(_row)
+                        run(_current_block, _next_state)
 
 
 def is_asterisc(_symbol):
@@ -460,7 +470,7 @@ if __name__ == '__main__':
     print(header())
 
     # initialWord = raw_input('Forneça a palavra inicial: ')
-    initial_word = 'aba'
+    initial_word = 'abaaba'
 
     script = open('palindromo.MT', 'r')
 
@@ -473,4 +483,3 @@ if __name__ == '__main__':
     next_state = '01'
     current_block = 'main'
     run(current_block, next_state)
-    print stack

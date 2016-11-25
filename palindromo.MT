@@ -59,8 +59,8 @@ bloco sim 1
     01 moveFim 02
     02 * −− * d 03
     03 * −− S d 04
-    03 * −− I d 04
-    03 * −− M d retorne
+    04 * −− I d 05
+    05 * −− M d retorne
 fim ; sim
 
 ; palavra nao eh palindromo
@@ -68,6 +68,6 @@ bloco nao 1
     01 moveFim 02
     02 * −− * d 03
     03 * −− N d 04
-    03 * −− A d 04
-    03 * −− O d retorne
+    04 * −− A d 05
+    05 * −− O d retorne
 fim ; nao
