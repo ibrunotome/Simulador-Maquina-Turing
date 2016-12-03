@@ -5,14 +5,17 @@ tape = ''
 head_position = 21  # The current position of head
 blocks = {}  # All the blocks readed
 stack = []  # Stack to come back to the last block and state
-verbose = False
-resume = True
+verbose = True
+resume = False
+left_delimiter = '('
+right_delimiter = ')'
 
 
 def header():
     """
     Return the header for this work
     """
+
     header_string = '\nSimulador de Máquina de Turing v1.0'
     header_string += '\nDesenvolvido como trabalho prático para a disciplina de Teoria da Computação.'
     header_string += '\nAutores: Bruno Tomé, Ronan Nunes.'
@@ -273,7 +276,7 @@ def set_initial_head(_initial_word):
     :return:
     """
 
-    return '(' + _initial_word[0] + ')' + _initial_word[1:]
+    return left_delimiter + _initial_word[0] + right_delimiter + _initial_word[1:]
 
 
 def set_initial_tape(_initial_word):
@@ -422,6 +425,12 @@ def run(_current_block, _next_state):
 
     for _row in blocks[_current_block]:
 
+        # Head is on the left side of word in tape on the last block
+        if get_block(_row) == 'sim' or get_block(_row) == 'nao':
+            if tape[head_position] == '_':
+                move_head_right()
+                head_position += 1
+
         if get_current_state(_row) == _next_state:
 
             # It's a row with format: <current state> <current symbol> -- <next symbol> <direction> <next state>
@@ -457,7 +466,6 @@ def run(_current_block, _next_state):
                         # It's the end
                         _next_state = get_next_block_state(index)
                         stack.append(_next_state)
-                        print _current_block
                         stack.append(_current_block)
 
                         run(get_block(index), '01')
@@ -479,19 +487,21 @@ def is_asterisc(_symbol):
 if __name__ == '__main__':
     print(header())
 
-    # initialWord = raw_input('Forneça a palavra inicial: ')
-    initial_word = 'aba'
+    # initial_word = raw_input('Forneça a palavra inicial: ')
+
+    initial_word = 'babab'
 
     script = open('palindromo.MT', 'r')
 
     set_initial_tape(initial_word)
 
-    # Read all the file and put blocks into a list
+    # Read all the file and put the blocks into a list
     read_blocks(script)
 
     current_state = '01'
     next_state = '01'
     current_block = 'main'
     run(current_block, next_state)
+
     if resume:
         print out
