@@ -1,14 +1,16 @@
 # coding=utf-8
+import argparse
 
 out = ''
 tape = ''
 head_position = 21  # The current position of head
 blocks = {}  # All the blocks readed
 stack = []  # Stack to come back to the last block and state
-verbose = True
+verbose = False
 resume = False
 left_delimiter = '('
 right_delimiter = ')'
+steps = None
 
 
 def header():
@@ -22,6 +24,30 @@ def header():
     header_string += '\nIFMG, 2016.\n'
 
     return header_string
+
+
+def set_resume_true(*args):
+    global resume
+
+    resume = True
+
+
+def set_resume_false(*args):
+    global resume
+
+    resume = False
+
+
+def set_verbose_true(*args):
+    global verbose
+
+    verbose = True
+
+
+def set_verbose_false(*args):
+    global verbose
+
+    verbose = False
 
 
 def get_globals():
@@ -64,6 +90,7 @@ def move_head_right():
 
     tape = swap(tape, head_position - 1, head_position)
     tape = swap(tape, head_position + 1, head_position + 2)
+    head_position += 1
 
 
 def move_head_left():
@@ -76,6 +103,7 @@ def move_head_left():
 
     tape = swap(tape, head_position, head_position + 1)
     tape = swap(tape, head_position - 2, head_position - 1)
+    head_position -= 1
 
 
 def get_block(_row):
@@ -233,10 +261,8 @@ def move_head_position(_row):
 
     if _direction == 'd':
         move_head_right()
-        head_position += 1
     elif _direction == 'e':
         move_head_left()
-        head_position -= 1
 
 
 def set_left_tape():
@@ -429,7 +455,6 @@ def run(_current_block, _next_state):
         if get_block(_row) == 'sim' or get_block(_row) == 'nao':
             if tape[head_position] == '_':
                 move_head_right()
-                head_position += 1
 
         if get_current_state(_row) == _next_state:
 
@@ -485,11 +510,19 @@ def is_asterisc(_symbol):
 
 
 if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-r', dest='action', action='store_const', const=set_resume_true, default=set_resume_false)
+    parser.add_argument('-v', dest='action', action='store_const', const=set_verbose_true, default=set_verbose_false)
+    parser.add_argument('args', nargs='*')
+    args = parser.parse_args()
+    args.action(args.args)
+
     print(header())
 
     # initial_word = raw_input('Forneça a palavra inicial: ')
 
-    initial_word = 'babab'
+    initial_word = 'aba'
 
     script = open('palindromo.MT', 'r')
 
