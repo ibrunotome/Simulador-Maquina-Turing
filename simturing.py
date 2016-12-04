@@ -509,20 +509,48 @@ def is_asterisc(_symbol):
     return False
 
 
-if __name__ == '__main__':
+def get_parameters():
+    """
+    Change delimiter of tape
+    """
+
+    global left_delimiter
+    global right_delimiter
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('-r', dest='action', action='store_const', const=set_resume_true, default=set_resume_false)
-    parser.add_argument('-v', dest='action', action='store_const', const=set_verbose_true, default=set_verbose_false)
+    parser.add_argument('-r', '-resume', dest='action', action='store_const', const=set_resume_true,
+                        default=set_resume_false,
+                        help='Print only final result.')
+    parser.add_argument('-v', '-verbose', dest='action', action='store_const', const=set_verbose_true,
+                        default=set_verbose_false,
+                        help='Print step by step.')
+    parser.add_argument('-head', help='Change the delimiter')
     parser.add_argument('args', nargs='*')
     args = parser.parse_args()
     args.action(args.args)
 
+    if args.head is not None and len(args.head) == 2:
+        left_delimiter = args.head[0]
+        right_delimiter = args.head[1]
+
+    if not resume and not verbose and steps is None:
+        print 'Run again using ONE of the following REQUIRED arguments:\n'
+        print '-r/-resume: Print only final result'
+        print '-v/-verbose: Print step by step'
+        print '-s/-step: Print x steps'
+
+        print '\nOptionally, you can change delimiter by using the argument -head "<delim>"\n'
+        exit(0)
+
+
+if __name__ == '__main__':
+
+    # Work with the parameters
+    get_parameters()
+
     print(header())
 
-    # initial_word = raw_input('Forneça a palavra inicial: ')
-
-    initial_word = 'aba'
+    initial_word = raw_input('Put the initial word: ')
 
     script = open('palindromo.MT', 'r')
 
