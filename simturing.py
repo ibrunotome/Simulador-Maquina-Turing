@@ -11,6 +11,7 @@ resume = False
 left_delimiter = '('
 right_delimiter = ')'
 steps = None
+step = 0
 
 
 def header():
@@ -345,11 +346,33 @@ def output(_block, _state):
     global out
     global tape
     global verbose
+    global resume
+    global step
+    global steps
 
     out = fix_block_output(_block) + fix_state_output(_state) + tape
 
-    if verbose:
+    if (verbose or steps) and not resume:
         print out
+
+    if steps is not None:
+        step += 1
+
+    if step == steps:
+        parameter = raw_input('New option (r, v, s): ')
+        if parameter == 'r':
+            verbose = False
+            resume = True
+        elif parameter == 'v':
+            verbose = True
+            resume = False
+        elif parameter == 's':
+            verbose = False
+            resume = False
+            steps = input('How much steps: ')
+            step = 0
+        else:
+            step = 0
 
 
 def read_blocks(_script):
@@ -516,6 +539,7 @@ def get_parameters():
 
     global left_delimiter
     global right_delimiter
+    global steps
 
     parser = argparse.ArgumentParser()
     parser.add_argument('-r', '-resume', dest='action', action='store_const', const=set_resume_true,
@@ -524,6 +548,7 @@ def get_parameters():
     parser.add_argument('-v', '-verbose', dest='action', action='store_const', const=set_verbose_true,
                         default=set_verbose_false,
                         help='Print step by step.')
+    parser.add_argument('-s', '-step', help='Set the number of steps to verbose', type=int)
     parser.add_argument('-head', help='Change the delimiter')
     parser.add_argument('args', nargs='*')
     args = parser.parse_args()
@@ -532,6 +557,9 @@ def get_parameters():
     if args.head is not None and len(args.head) == 2:
         left_delimiter = args.head[0]
         right_delimiter = args.head[1]
+
+    if args.s is not None and args.s > 0:
+        steps = args.s
 
     if not resume and not verbose and steps is None:
         print 'Run again using ONE of the following REQUIRED arguments:\n'
