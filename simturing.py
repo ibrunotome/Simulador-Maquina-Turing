@@ -24,7 +24,7 @@ def header():
 
     header_string = '\nSimulador de Máquina de Turing v1.0'
     header_string += '\nDesenvolvido como trabalho prático para a disciplina de Teoria da Computação.'
-    header_string += '\nAutores: Bruno Tomé.'
+    header_string += '\nAutor: Bruno Tomé.'
     header_string += '\nRepositório no GitHub: https://github.com/ibrunotome/Simulador-Maquina-Turing'
     header_string += '\nIFMG, 2016.\n'
 
@@ -86,8 +86,8 @@ def swap(s, i, j):
     try:
         tape_list[i], tape_list[j] = tape_list[j], tape_list[i]
     except IndexError:
-        tape_list = ['_'] * 5 + tape_list
-        tape_list += ['_'] * 5
+        tape_list = ['_'] * 100 + tape_list
+        tape_list += ['_'] * 100
 
         i += 6
         j += 4
@@ -313,7 +313,7 @@ def set_right_tape_list(_initial_word):
     """
 
     _blank_space = ''
-    for _i in xrange(0, (100 - len(_initial_word))):
+    for _i in xrange(0, (200 - len(_initial_word))):
         _blank_space += '_'
 
     return _blank_space
