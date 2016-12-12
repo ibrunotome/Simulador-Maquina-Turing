@@ -1,5 +1,8 @@
 # coding=utf-8
 import argparse
+import sys
+
+sys.setrecursionlimit(20000)
 
 out = ''
 tape = ''
@@ -21,7 +24,8 @@ def header():
 
     header_string = '\nSimulador de Máquina de Turing v1.0'
     header_string += '\nDesenvolvido como trabalho prático para a disciplina de Teoria da Computação.'
-    header_string += '\nAutores: Bruno Tomé, Ronan Nunes.'
+    header_string += '\nAutores: Bruno Tomé.'
+    header_string += '\nRepositório no GitHub: https://github.com/ibrunotome/Simulador-Maquina-Turing'
     header_string += '\nIFMG, 2016.\n'
 
     return header_string
@@ -75,10 +79,23 @@ def swap(s, i, j):
     :return:
     """
 
-    lst = list(s)
-    lst[i], lst[j] = lst[j], lst[i]
+    global head_position
 
-    return ''.join(lst)
+    tape_list = list(s)
+
+    try:
+        tape_list[i], tape_list[j] = tape_list[j], tape_list[i]
+    except IndexError:
+        tape_list = ['_'] * 5 + tape_list
+        tape_list += ['_'] * 5
+
+        i += 6
+        j += 4
+        head_position += 5
+
+        tape_list[i], tape_list[j] = tape_list[j], tape_list[i]
+
+    return ''.join(tape_list)
 
 
 def move_head_right():
@@ -119,6 +136,13 @@ def get_block(_row):
     _block = _block[1]
 
     return _block
+
+
+def fix_tape_output():
+    global tape
+    global head_position
+
+    return tape[head_position - 20:head_position] + tape[head_position:head_position + 20]
 
 
 def fix_block_output(_block):
@@ -266,7 +290,7 @@ def move_head_position(_row):
         move_head_left()
 
 
-def set_left_tape():
+def set_left_tape_list():
     """
     Set the initial left tape
 
@@ -274,13 +298,13 @@ def set_left_tape():
     """
 
     _blank_space = ''
-    for _i in range(0, 20):
+    for _i in xrange(0, 20):
         _blank_space += '_'
 
     return _blank_space
 
 
-def set_right_tape(_initial_word):
+def set_right_tape_list(_initial_word):
     """
     Set the initial right tape
 
@@ -289,7 +313,7 @@ def set_right_tape(_initial_word):
     """
 
     _blank_space = ''
-    for _i in range(0, (20 - len(_initial_word))):
+    for _i in xrange(0, (100 - len(_initial_word))):
         _blank_space += '_'
 
     return _blank_space
@@ -306,7 +330,7 @@ def set_initial_head(_initial_word):
     return left_delimiter + _initial_word[0] + right_delimiter + _initial_word[1:]
 
 
-def set_initial_tape(_initial_word):
+def set_initialtape_list(_initial_word):
     """
     Set the initial tape
 
@@ -315,10 +339,10 @@ def set_initial_tape(_initial_word):
 
     global tape
 
-    tape = set_left_tape() + set_initial_head(_initial_word) + set_right_tape(_initial_word)
+    tape = set_left_tape_list() + set_initial_head(_initial_word) + set_right_tape_list(_initial_word)
 
 
-def update_tape(_row):
+def updatetape_list(_row):
     """
     Update the content of the tape
 
@@ -350,7 +374,7 @@ def output(_block, _state):
     global step
     global steps
 
-    out = fix_block_output(_block) + fix_state_output(_state) + tape
+    out = fix_block_output(_block) + fix_state_output(_state) + fix_tape_output()
 
     if (verbose or steps) and not resume:
         print out
@@ -398,7 +422,7 @@ def read_blocks(_script):
             continue
         elif _row.startswith(' '):
 
-            # It's a new instrucion
+            # It's a new instruction
             list_of_this_block.append(_row)
         elif _row.startswith('fim'):
 
@@ -423,7 +447,7 @@ def state_transition(_current_block, _row):
 
     # The content on the tape is equal to current symbol
     if tape[head_position] == get_current_symbol(_row):
-        update_tape(_row)
+        updatetape_list(_row)
 
         # If the next state was 'retorne', come back one state in the stack
         if get_next_state(_row) == 'retorne':
@@ -439,7 +463,7 @@ def state_transition(_current_block, _row):
 
                 # It's the end of machine
                 if stack[len(stack) - 1] == 'sim' or stack[len(stack) - 1] == 'nao':
-                    # Clean the stack
+                    # Clear the stack
                     stack = []
                     return
 
@@ -447,12 +471,12 @@ def state_transition(_current_block, _row):
 
             # If position in the tape is equal to current symbol, write the new symbol to the tape
             if tape[head_position] == get_current_symbol(_row_of_block):
-                update_tape(_row_of_block)
+                updatetape_list(_row_of_block)
 
                 # If next state is 'retorne', call the block of stack and go back to the last state of the stack
                 if get_next_state(_row_of_block) == 'retorne':
                     move_head_position(_row_of_block)
-                    update_tape(_row_of_block)
+                    updatetape_list(_row_of_block)
                     return run(stack[len(stack) - 1], stack[len(stack) - 2])
 
         move_head_position(_row)
@@ -483,16 +507,18 @@ def run(_current_block, _next_state):
 
             # It's a row with format: <current state> <current symbol> -- <next symbol> <direction> <next state>
             if len(_row.split()) == 6:
+
                 if tape[head_position] == get_current_symbol(_row):
                     _next_state = get_next_state(_row)
                     state_transition(_current_block, _row)
                 elif is_asterisc(get_current_symbol(_row)):
                     move_head_position(_row)
-                    update_tape(_row)
+                    updatetape_list(_row)
                     run(_current_block, get_next_state(_row))
 
             # It's a row with format: bloco <id> <initial_state>
             elif len(_row.split()) == 3:
+
                 output(_current_block, get_current_state(_row))
                 _next_state = get_next_block_state(_row)
 
@@ -506,6 +532,7 @@ def run(_current_block, _next_state):
 
                 # It's a subblock of a block
                 for index in blocks[_current_block]:
+
                     if len(index.split()) == 6:
                         _next_state = get_next_state(index)
                         state_transition(_current_block, index)
@@ -582,7 +609,7 @@ if __name__ == '__main__':
 
     script = open('palindromo.MT', 'r')
 
-    set_initial_tape(initial_word)
+    set_initialtape_list(initial_word)
 
     # Read all the file and put the blocks into a list
     read_blocks(script)
