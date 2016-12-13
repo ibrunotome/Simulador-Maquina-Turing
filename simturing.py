@@ -16,6 +16,8 @@ left_delimiter = '('
 right_delimiter = ')'
 steps = None
 step = 0
+breakpoint = False
+used_breakpoint = False
 
 
 def header():
@@ -33,24 +35,47 @@ def header():
 
 
 def set_resume_true(*args):
+    """
+    Set resume to true if argument exist
+
+    :param args:
+    """
+
     global resume
 
     resume = True
 
 
 def set_resume_false(*args):
+    """
+    Set resume to false if argument doesn't exist
+
+    :param args:
+    """
+
     global resume
 
     resume = False
 
 
 def set_verbose_true(*args):
+    """
+    Set verbose to true if argument exist
+
+    :param args:
+    """
+
     global verbose
 
     verbose = True
 
 
 def set_verbose_false(*args):
+    """
+    Set verbose to false if argument doesn't exist
+    :param args:
+    """
+
     global verbose
 
     verbose = False
@@ -345,7 +370,7 @@ def set_initialtape_list(_initial_word):
     tape = set_left_tape_list() + set_initial_head(_initial_word) + set_right_tape_list(_initial_word)
 
 
-def updatetape_list(_row):
+def update_tape_list(_row):
     """
     Update the content of the tape
 
@@ -376,6 +401,8 @@ def output(_block, _state):
     global resume
     global step
     global steps
+    global breakpoint
+    global used_breakpoint
 
     out = fix_block_output(_block) + fix_state_output(_state) + fix_tape_output()
 
@@ -385,7 +412,9 @@ def output(_block, _state):
     if steps is not None:
         step += 1
 
-    if step == steps:
+    if breakpoint or (step == steps):
+        breakpoint = False
+        used_breakpoint = True
         parameter = raw_input('New option (r, v, s): ')
         if parameter == 'r':
             verbose = False
@@ -456,7 +485,7 @@ def state_transition(_current_block, _row):
 
     # The content on the tape is equal to current symbol
     if tape[head_position] == get_current_symbol(_row):
-        updatetape_list(_row)
+        update_tape_list(_row)
 
         # If the next state was 'retorne', come back one state in the stack
         if get_next_state(_row) == 'retorne':
@@ -480,12 +509,12 @@ def state_transition(_current_block, _row):
 
             # If position in the tape is equal to current symbol, write the new symbol to the tape
             if tape[head_position] == get_current_symbol(_row_of_block):
-                updatetape_list(_row_of_block)
+                update_tape_list(_row_of_block)
 
                 # If next state is 'retorne', call the block of stack and go back to the last state of the stack
                 if get_next_state(_row_of_block) == 'retorne':
                     move_head_position(_row_of_block)
-                    updatetape_list(_row_of_block)
+                    update_tape_list(_row_of_block)
 
                     # It's the end of machine
                     if len(stack) > 0:
@@ -507,10 +536,18 @@ def run(_current_block, _next_state):
 
     global tape
     global head_position
+    global breakpoint
+    global used_breakpoint
 
     output(_current_block, _next_state)
 
     for _row in blocks[_current_block]:
+
+        bpoint = _row.find('!')
+        if bpoint != -1 and not used_breakpoint:
+            breakpoint = True
+        else:
+            used_breakpoint = False
 
         # Head is on the left side of word in tape on the last block
         if get_block(_row) == 'sim' or get_block(_row) == 'nao':
@@ -520,18 +557,18 @@ def run(_current_block, _next_state):
         if get_current_state(_row) == _next_state:
 
             # It's a row with format: <current state> <current symbol> -- <next symbol> <direction> <next state>
-            if len(_row.split()) == 6:
+            if len(_row.split()) >= 6:
 
                 if tape[head_position] == get_current_symbol(_row):
                     _next_state = get_next_state(_row)
                     state_transition(_current_block, _row)
                 elif is_asterisc(get_current_symbol(_row)):
                     move_head_position(_row)
-                    updatetape_list(_row)
+                    update_tape_list(_row)
                     return run(_current_block, get_next_state(_row))
 
             # It's a row with format: bloco <id> <initial_state>
-            elif len(_row.split()) == 3:
+            elif len(_row.split()) < 6:
 
                 output(_current_block, get_current_state(_row))
                 _next_state = get_next_block_state(_row)
@@ -547,10 +584,10 @@ def run(_current_block, _next_state):
                 # It's a subblock of a block
                 for index in blocks[_current_block]:
 
-                    if len(index.split()) == 6:
+                    if len(index.split()) >= 6:
                         _next_state = get_next_state(index)
                         state_transition(_current_block, index)
-                    elif len(index.split()) == 3:
+                    elif len(index.split()) < 6:
 
                         # It's the end
                         _next_state = get_next_block_state(index)
