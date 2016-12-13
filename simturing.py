@@ -486,7 +486,12 @@ def state_transition(_current_block, _row):
                 if get_next_state(_row_of_block) == 'retorne':
                     move_head_position(_row_of_block)
                     updatetape_list(_row_of_block)
-                    return run(stack[len(stack) - 1], stack[len(stack) - 2])
+
+                    # It's the end of machine
+                    if len(stack) > 0:
+                        return run(stack[len(stack) - 1], stack[len(stack) - 2])
+                    else:
+                        return
 
         move_head_position(_row)
         state_transition(_current_block, _row)
@@ -523,7 +528,7 @@ def run(_current_block, _next_state):
                 elif is_asterisc(get_current_symbol(_row)):
                     move_head_position(_row)
                     updatetape_list(_row)
-                    run(_current_block, get_next_state(_row))
+                    return run(_current_block, get_next_state(_row))
 
             # It's a row with format: bloco <id> <initial_state>
             elif len(_row.split()) == 3:
@@ -552,7 +557,7 @@ def run(_current_block, _next_state):
                         stack.append(_next_state)
                         stack.append(_current_block)
 
-                        run(get_block(index), '01')
+                        return run(get_block(index), '01')
 
 
 def is_asterisc(_symbol):
