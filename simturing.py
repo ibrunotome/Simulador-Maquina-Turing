@@ -2,6 +2,7 @@
 import argparse
 import sys
 
+# Limit of recursions
 sys.setrecursionlimit(20000)
 
 out = ''
@@ -86,6 +87,8 @@ def swap(s, i, j):
     try:
         tape_list[i], tape_list[j] = tape_list[j], tape_list[i]
     except IndexError:
+
+        # Extend the tape size
         tape_list = ['_'] * 100 + tape_list
         tape_list += ['_'] * 100
 
@@ -154,7 +157,7 @@ def fix_block_output(_block):
     """
 
     _block_fixed = ''
-    for _i in range(0, (16 - len(_block))):
+    for _i in xrange(0, (16 - len(_block))):
         _block_fixed += '.'
 
     return _block_fixed + _block + '.'
@@ -183,7 +186,7 @@ def fix_state_output(_state):
     """
 
     _state_fixed = ''
-    for _i in range(0, (4 - len(_state))):
+    for _i in xrange(0, (4 - len(_state))):
         _state_fixed += '0'
 
     return _state_fixed + _state + ':'
@@ -409,11 +412,18 @@ def read_blocks(_script):
     global blocks
 
     rows = _script.readlines()
-    rows = [x for x in rows if not x.startswith('    ;') or not x.startswith(';')]
     list_of_this_block = []
     block = ''
 
     for _row in rows:
+
+        if _row.startswith('    ;') or _row.startswith(';'):
+            continue
+
+        # Remove midle comments
+        comment = _row.find(';')
+        if comment != -1:
+            _row = _row[:comment]
 
         # Check if there is a block
         if _row.startswith('bloco'):
@@ -421,7 +431,6 @@ def read_blocks(_script):
             block = get_block(_row)
             continue
         elif _row.startswith(' '):
-
             # It's a new instruction
             list_of_this_block.append(_row)
         elif _row.startswith('fim'):
@@ -462,7 +471,7 @@ def state_transition(_current_block, _row):
             if get_next_state(_row_of_block) == 'retorne':
 
                 # It's the end of machine
-                if stack[len(stack) - 1] == 'sim' or stack[len(stack) - 1] == 'nao':
+                if (len(stack) > 0) and ((stack[len(stack) - 1] == 'sim') or (stack[len(stack) - 1] == 'nao')):
                     # Clear the stack
                     stack = []
                     return
@@ -607,7 +616,7 @@ if __name__ == '__main__':
 
     initial_word = raw_input('Put the initial word: ')
 
-    script = open('palindromo.MT', 'r')
+    script = open(sys.argv[-1:][0], 'r')
 
     set_initialtape_list(initial_word)
 

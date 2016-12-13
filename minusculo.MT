@@ -1,22 +1,22 @@
-; Converte palavra minúscula para maiúscula a partir das pontas
+; Converte palavra maiúscula para minúscula a partir das pontas
 bloco main 1
-    01 a −− A i 10
-    01 b −− B i 20
-    01 A −− * i 70 ; Palavra já estava em maiúsculo
-    01 B -- * i 70 ; Palavra já estava em maiúsculo
+    01 A −− a i 10
+    01 B −− b i 20
+    01 a −− * i 70 ; Palavra já estava em minúsculo
+    01 b -- * i 70 ; Palavra já estava em minúsculo
     10 moveFim 11
     20 moveFim 21
 
     ; leu a
     11 iniEsq 12
-    12 a −− A i 30
-    12 b −− * i 30
+    12 A −− a i 30
+    12 B −− * i 30
     12 _ −− * i 60
 
     ; leu b
     21 iniEsq 22
-    22 a −− * i 30
-    22 b −− B i 30
+    22 A −− * i 30
+    22 B −− a i 30
     22 _ −− * i 60
 
     30 moveIni 31
@@ -43,16 +43,16 @@ fim ; moveIni
 ; recua ate caractere minusculo ou _
 bloco iniEsq 1
     01 _ −− * i retorne
-    01 a −− * i retorne
-    01 b −− * i retorne
+    01 A −− * i retorne
+    01 B −− * i retorne
     01 * −− * e 01
 fim ; iniEsq
 
 ; avanca ate caractere minusculo ou _
 bloco iniDir 1
     01 _ −− * i retorne
-    01 a −− * i retorne
-    01 b −− * i retorne
+    01 A −− * i retorne
+    01 B −− * i retorne
     01 * −− * d 01
 fim ; iniDir
 
@@ -65,7 +65,7 @@ bloco sim 1
     05 * −− M d retorne
 fim ; sim
 
-; Palavra já era maiúscula
+; Palavra já era minúscula
 bloco nao 1
     01 moveFim 02
     02 * −− * d 03
