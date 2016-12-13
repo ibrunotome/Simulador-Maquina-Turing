@@ -7,7 +7,7 @@ bloco main 1
 
     ; leu a
     11 iniEsq 12
-    12 a −− A i 30 !
+    12 a −− A i 30
     12 b −− * i 70
     12 _ −− * i 60
 

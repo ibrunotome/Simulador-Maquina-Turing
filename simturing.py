@@ -10,19 +10,21 @@ tape = ''
 head_position = 21  # The current position of head
 blocks = {}  # All the blocks readed
 stack = []  # Stack to come back to the last block and state
-verbose = False
-resume = False
-left_delimiter = '('
-right_delimiter = ')'
-steps = None
-step = 0
-breakpoint = False
-used_breakpoint = False
+verbose = False  # If verbose is true, print all states transitions
+resume = False  # If resume is true, print only the final state of tape
+left_delimiter = '('  # Default left delimiter
+right_delimiter = ')'  # Default right delimiter
+steps = None  # If steps is true, run only x steps
+step = 0  # Steps counted
+breakpoint = False  # If breakpoint is true, stop and ask what to do
+used_breakpoint = False  # If used_breakpoint is true, do not breakpoint again on the same line
 
 
 def header():
     """
     Return the header for this work
+
+    :return str:
     """
 
     header_string = '\nSimulador de Máquina de Turing v1.0'
@@ -36,7 +38,7 @@ def header():
 
 def set_resume_true(*args):
     """
-    Set resume to true if argument exist
+    Set resume flag to true if argument exist
 
     :param args:
     """
@@ -48,7 +50,7 @@ def set_resume_true(*args):
 
 def set_resume_false(*args):
     """
-    Set resume to false if argument doesn't exist
+    Set resume flag to false if argument doesn't exist
 
     :param args:
     """
@@ -60,7 +62,7 @@ def set_resume_false(*args):
 
 def set_verbose_true(*args):
     """
-    Set verbose to true if argument exist
+    Set verbose flag to true if argument exist
 
     :param args:
     """
@@ -72,7 +74,8 @@ def set_verbose_true(*args):
 
 def set_verbose_false(*args):
     """
-    Set verbose to false if argument doesn't exist
+    Set verbose flag to false if argument doesn't exist
+
     :param args:
     """
 
@@ -102,7 +105,7 @@ def swap(s, i, j):
     :param s:
     :param i:
     :param j:
-    :return:
+    :return str:
     """
 
     global head_position
@@ -112,8 +115,7 @@ def swap(s, i, j):
     try:
         tape_list[i], tape_list[j] = tape_list[j], tape_list[i]
     except IndexError:
-
-        # Extend the tape size
+        # Extend the tape size in 200 new blank spaces
         tape_list = ['_'] * 100 + tape_list
         tape_list += ['_'] * 100
 
@@ -167,10 +169,15 @@ def get_block(_row):
 
 
 def fix_tape_output():
+    """
+    Tape can be "infinite", but only print 41 chars on the screen
+
+    :return:
+    """
     global tape
     global head_position
 
-    return tape[head_position - 20:head_position] + tape[head_position:head_position + 20]
+    return tape[head_position - 20:head_position] + tape[head_position] + tape[head_position + 1:head_position + 21]
 
 
 def fix_block_output(_block):
@@ -219,7 +226,7 @@ def fix_state_output(_state):
 
 def get_current_state(_row):
     """
-    Get the current state of non block row
+    Get the current state of row
 
     :param _row:
     :return int:
@@ -352,13 +359,13 @@ def set_initial_head(_initial_word):
     Put the head into the initial word
 
     :param _initial_word:
-    :return:
+    :return str:
     """
 
     return left_delimiter + _initial_word[0] + right_delimiter + _initial_word[1:]
 
 
-def set_initialtape_list(_initial_word):
+def set_initial_tape_list(_initial_word):
     """
     Set the initial tape
 
@@ -370,7 +377,7 @@ def set_initialtape_list(_initial_word):
     tape = set_left_tape_list() + set_initial_head(_initial_word) + set_right_tape_list(_initial_word)
 
 
-def update_tape_list(_row):
+def update_tape(_row):
     """
     Update the content of the tape
 
@@ -433,7 +440,7 @@ def output(_block, _state):
 
 def read_blocks(_script):
     """
-    Read all the rows and put into a list, foreach list and save the blocks
+    Read all the rows and put into a list, foreach list and save the blocks into other lists
 
     :param _script:
     """
@@ -445,11 +452,11 @@ def read_blocks(_script):
     block = ''
 
     for _row in rows:
-
+        # Jump comments
         if _row.startswith('    ;') or _row.startswith(';'):
             continue
 
-        # Remove midle comments
+        # Remove middle comments
         comment = _row.find(';')
         if comment != -1:
             _row = _row[:comment]
@@ -458,13 +465,11 @@ def read_blocks(_script):
         if _row.startswith('bloco'):
             # It's a new block
             block = get_block(_row)
-            continue
         elif _row.startswith(' '):
             # It's a new instruction
             list_of_this_block.append(_row)
         elif _row.startswith('fim'):
-
-            # It's time to put the instructions of this block into the block position
+            # It's time to put the instructions of this block into the blocks list
             blocks[block] = list_of_this_block
             list_of_this_block = []
 
@@ -483,12 +488,14 @@ def state_transition(_current_block, _row):
     global blocks
     global stack
 
-    # The content on the tape is equal to current symbol
+    # If position in the tape is equal to current symbol, write the new symbol to the tape
     if tape[head_position] == get_current_symbol(_row):
-        update_tape_list(_row)
+        # Update the tape with the next symbol of instruction
+        update_tape(_row)
 
-        # If the next state was 'retorne', come back one state in the stack
+        # If the next state was 'retorne', come back one state and block in the stack
         if get_next_state(_row) == 'retorne':
+            output(_current_block, get_current_state(_row))
             return run(stack[len(stack) - 1], stack[len(stack) - 2])
 
     elif get_current_state(_row) == get_next_state(_row):
@@ -501,20 +508,25 @@ def state_transition(_current_block, _row):
 
                 # It's the end of machine
                 if (len(stack) > 0) and ((stack[len(stack) - 1] == 'sim') or (stack[len(stack) - 1] == 'nao')):
+                    move_head_position(_row_of_block)
+                    update_tape(_row_of_block)
                     # Clear the stack
                     stack = []
                     return
 
+                # Print the output
                 output(_current_block, get_current_state(_row_of_block))
 
             # If position in the tape is equal to current symbol, write the new symbol to the tape
             if tape[head_position] == get_current_symbol(_row_of_block):
-                update_tape_list(_row_of_block)
+                # Update the tape with the next symbol of instruction
+                update_tape(_row_of_block)
 
                 # If next state is 'retorne', call the block of stack and go back to the last state of the stack
                 if get_next_state(_row_of_block) == 'retorne':
                     move_head_position(_row_of_block)
-                    update_tape_list(_row_of_block)
+                    update_tape(_row_of_block)
+                    output(_current_block, get_current_state(_row_of_block))
 
                     # It's the end of machine
                     if len(stack) > 0:
@@ -523,6 +535,7 @@ def state_transition(_current_block, _row):
                         return
 
         move_head_position(_row)
+        update_tape(_row)
         state_transition(_current_block, _row)
 
 
@@ -539,19 +552,21 @@ def run(_current_block, _next_state):
     global breakpoint
     global used_breakpoint
 
+    # Print the output
     output(_current_block, _next_state)
 
     for _row in blocks[_current_block]:
 
+        # Check if line have a breakpoint
         bpoint = _row.find('!')
         if bpoint != -1 and not used_breakpoint:
             breakpoint = True
         else:
             used_breakpoint = False
 
-        # Head is on the left side of word in tape on the last block
+        # Head is on the left side of word in tape on the last block of stack
         if get_block(_row) == 'sim' or get_block(_row) == 'nao':
-            if tape[head_position] == '_':
+            if tape[head_position] == '_' and tape[head_position + 1] != '_':
                 move_head_right()
 
         if get_current_state(_row) == _next_state:
@@ -564,16 +579,19 @@ def run(_current_block, _next_state):
                     state_transition(_current_block, _row)
                 elif is_asterisc(get_current_symbol(_row)):
                     move_head_position(_row)
-                    update_tape_list(_row)
+                    update_tape(_row)
                     return run(_current_block, get_next_state(_row))
 
             # It's a row with format: bloco <id> <initial_state>
             elif len(_row.split()) < 6:
 
-                output(_current_block, get_current_state(_row))
                 _next_state = get_next_block_state(_row)
 
                 if len(stack) != 0:
+                    # Print the output
+                    if get_current_state(_row) not in stack:
+                        output(stack[len(stack) - 1], get_current_state(_row))
+
                     stack.pop()  # Remove block
                     stack.pop()  # Remove state
                 stack.append(_next_state)
@@ -581,7 +599,7 @@ def run(_current_block, _next_state):
 
                 _current_block = get_block(_row)
 
-                # It's a subblock of a block
+                # It's a sub-block of a block
                 for index in blocks[_current_block]:
 
                     if len(index.split()) >= 6:
@@ -660,14 +678,14 @@ if __name__ == '__main__':
 
     script = open(sys.argv[-1:][0], 'r')
 
-    set_initialtape_list(initial_word)
+    set_initial_tape_list(initial_word)
 
-    # Read all the file and put the blocks into a list
+    # Read all the file and put the blocks into lists
     read_blocks(script)
 
-    current_state = '01'
     next_state = '01'
     current_block = 'main'
+
     run(current_block, next_state)
 
     if resume:
