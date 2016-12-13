@@ -84,20 +84,6 @@ def set_verbose_false(*args):
     verbose = False
 
 
-def get_globals():
-    global tape
-    global head_position
-    global stack
-
-    print('\n\nGLOBALS\n')
-
-    print('tape: ', tape)
-    print('head_position: ', head_position)
-    print('stack: ', stack)
-
-    print('==================================================\n\n')
-
-
 def swap(s, i, j):
     """
     Swap two chars
